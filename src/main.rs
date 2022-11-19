@@ -26,7 +26,7 @@ fn posts_list()-> Json<Vec<app::models::Post>>{
 
 // curl -i -X DELETE "http://127.0.0.1:8080/posts/1"
 #[delete("/<id>")]
-fn post_delete(id: i8){
+fn post_delete(id: i32){
     return repositories::posts_repository::delete_post(id);
 }
 

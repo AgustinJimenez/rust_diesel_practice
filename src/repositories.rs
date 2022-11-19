@@ -31,13 +31,13 @@ pub mod posts_repository{
             .expect("Error saving new post")
     }
 
-    pub fn delete_post(post_id: i8){
+    pub fn delete_post(post_id: i32){
         use diesel::prelude::*;
         
         let connection = &mut app::establish_connection();
         let num_deleted = diesel::delete(
             app::schema::posts::table.filter(
-                app::schema::posts::columns::id::eq(post_id)
+                app::schema::posts::columns::id.eq(post_id)
             )
         )
         .execute(connection)
