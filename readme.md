@@ -6,6 +6,19 @@
 
 - cargo install cargo-watch
 
+### install diesel cli if isn't already installed
+
+- brew install diesel
+
+### generate .env file
+
+- cp .env.example .env
+
+### setup database (check the .env.example file for db credentials)
+
+- diesel setup
+- diesel migration run
+
 ### run server
 
 - cargo watch -x run
