@@ -1,3 +1,11 @@
+### install dependencies
+
+- cargo build
+
+### install cargo-watch if necessary (for the next command)
+
+- cargo install cargo-watch
+
 ### run server
 
 - cargo watch -x run
