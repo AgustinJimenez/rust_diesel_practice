@@ -1,5 +1,5 @@
 use diesel::prelude::{Queryable, Insertable};
-use rocket::serde::{Deserialize, Serialize};
+use rocket::{serde::{Deserialize, Serialize}};
 
 
 #[derive(Queryable, Serialize, Deserialize)]
@@ -16,4 +16,5 @@ pub struct Post {
 pub struct NewPost<'a> {
     pub title: &'a str,
     pub body: &'a str,
-}
+    pub published: &'a bool,
+}   

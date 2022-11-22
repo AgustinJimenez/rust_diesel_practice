@@ -1,15 +1,18 @@
 
 
 pub mod posts_repository{
+    use app::schema::posts::published;
     use diesel::{RunQueryDsl, QueryDsl};
     use rocket::serde::json::Json;
+    use diesel::ExpressionMethods;
 
     pub fn get_posts() -> Vec<app::models::Post> {
 
         let connection = &mut app::establish_connection();
         let results = app::schema::posts::table
-        // .filter(app::schema::posts::published::published::eq(true))
-        .limit(5)
+        .filter(app::schema::posts::published.eq(true))
+        .order(app::schema::posts::id.desc())
+        .limit(10)
         .load::<app::models::Post>(connection)
         .expect("Error loading posts");
 
@@ -21,14 +24,16 @@ pub mod posts_repository{
         return result;
     }
 
-    pub fn create_post(title: &str, body: &str) -> app::models::Post {
+    pub fn create_post(title: &str, body: &str, is_published: &bool) -> rocket::serde::json::Json<app::models::Post> {
         let connection = &mut app::establish_connection();
-        let new_post = app::models::NewPost { title, body };
+        let new_post = app::models::NewPost { title, body, published: is_published };
 
-        diesel::insert_into(app::schema::posts::table)
+        let post = diesel::insert_into(app::schema::posts::table)
             .values(&new_post)
             .get_result(connection)
-            .expect("Error saving new post")
+            .expect("Error saving new post");
+
+        return Json(post);
     }
 
     pub fn delete_post(post_id: i32){
@@ -42,6 +47,7 @@ pub mod posts_repository{
         )
         .execute(connection)
         .expect("Error deleting posts");
+        
         println!("\n\nDELETE ===> id = {}, num deleted = {} \n\n", post_id, num_deleted)
     }
 

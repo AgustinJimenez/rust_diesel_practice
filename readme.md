@@ -33,5 +33,4 @@
 
 ### run tests
 
-- cargo test
 - cargo test -- --nocapture

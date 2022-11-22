@@ -1,0 +1,21 @@
+{
+  "name": "hello-world-rocket",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "cargo watch -x run",
+    "test": "cargo test -- --nocapture"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgustinJimenez/rust_diesel_practice.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AgustinJimenez/rust_diesel_practice/issues"
+  },
+  "homepage": "https://github.com/AgustinJimenez/rust_diesel_practice#readme"
+}

@@ -4,4 +4,5 @@ use rocket::serde::Deserialize;
 pub struct PostsCreateParams {
     pub title: String,
     pub body: String,
+    pub published: bool,
 }
