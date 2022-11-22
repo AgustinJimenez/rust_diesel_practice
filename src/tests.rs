@@ -11,12 +11,11 @@ mod test {
     #[test]
     fn test_create_post(){
         let client = Client::tracked(rocket()).expect("valid rocket instance");
-        let e_body: String = get_words(5..10);
-        let e_title: String = get_words(3..5);
         let data = json!(
             {
-            "title": e_title,
-            "body": e_body
+            "title": get_words(3..5),
+            "body": get_words(5..10),
+            "published": true
             }
         );
 
@@ -30,10 +29,11 @@ mod test {
             .body(data.to_string())
             .dispatch();
             assert_eq!(response.status(), Status::Ok);
+            
             let post = response.into_json::<app::models::Post>().unwrap();
-            assert_eq!(post.title, e_title);
-            assert_eq!(post.body, e_body);
-            assert_eq!(post.published, false);
+            assert_eq!(post.title, data.get("title").unwrap().as_str().unwrap());
+            assert_eq!(post.body, data.get("body").unwrap().as_str().unwrap() );
+            assert_eq!(post.published, data.get("published").unwrap().as_bool().unwrap() );
 
 
             let mut response = client.get("/posts").dispatch();
@@ -41,9 +41,8 @@ mod test {
             let posts = response.into_json::<Vec<app::models::Post>>().unwrap();
             let created_post = posts.into_iter().find(|item| {
             let result = item.id==post.id;
-            println!("\n e_id={}, id={}, title={}, body={}, published={}, result={}",post.id, item.id, item.title, item.body, item.published, result);
-
-            result
+            
+            true
             }).expect("Post not found");
         
             Ok(())
