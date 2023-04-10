@@ -1,5 +1,6 @@
 use diesel::prelude::{Queryable, Insertable};
 use rocket::{serde::{Deserialize, Serialize}};
+use std::fmt;
 
 
 #[derive(Queryable, Serialize, Deserialize)]
@@ -9,6 +10,12 @@ pub struct Post {
     pub title: String,
     pub body: String,
     pub published: bool,
+}
+
+impl fmt::Display for Post {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Post(id={}, title={}, body={}, published={})", self.id, self.title, self.body, self.published)
+    }
 }
 
 #[derive(Insertable)]

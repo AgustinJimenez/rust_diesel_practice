@@ -41,6 +41,7 @@ mod test {
             let posts = response.into_json::<Vec<app::models::Post>>().unwrap();
             let created_post = posts.into_iter().find(|item| {
             let result = item.id==post.id;
+            println!("ITEM ===> {}", item);
             
             true
             }).expect("Post not found");
