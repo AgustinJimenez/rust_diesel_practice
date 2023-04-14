@@ -1,5 +1,5 @@
 #[cfg(test)]
-use super::super::rocket;
+use super::rocket;
 use app::utils::utils::get_words;
 use diesel::result::Error::RollbackTransaction;
 use diesel::Connection;
@@ -19,38 +19,31 @@ fn test_create_post() {
     );
 
     let connection = &mut app::establish_connection();
+    connection.begin_test_transaction().unwrap();
 
-    connection.test_transaction::<_, diesel::result::Error, _>(|conn| {
-        let mut response = client
-            .post("/posts")
-            .header(ContentType::JSON)
-            .body(data.to_string())
-            .dispatch();
-        assert_eq!(response.status(), Status::Ok);
+    let mut response = client
+        .post("/posts")
+        .header(ContentType::JSON)
+        .body(data.to_string())
+        .dispatch();
 
-        let post = response.into_json::<crate::Post>().unwrap();
-        assert_eq!(post.title, data.get("title").unwrap().as_str().unwrap());
-        assert_eq!(post.body, data.get("body").unwrap().as_str().unwrap());
-        assert_eq!(
-            post.published,
-            data.get("published").unwrap().as_bool().unwrap()
-        );
+    assert_eq!(response.status(), Status::Ok); // post was created successfully
 
-        let mut response = client.get("/posts").dispatch();
-        assert_eq!(response.status(), Status::Ok);
-        let posts = response.into_json::<Vec<crate::Post>>().unwrap();
-        let created_post = posts
-            .into_iter()
-            .find(|item| {
-                let result = item.id == post.id;
-                println!("ITEM ===> {}", item);
+    let post = response.into_json::<crate::Post>().unwrap();
+    assert_eq!(post.title, data.get("title").unwrap().as_str().unwrap());
+    assert_eq!(post.body, data.get("body").unwrap().as_str().unwrap());
+    assert_eq!(
+        post.published,
+        data.get("published").unwrap().as_bool().unwrap()
+    );
 
-                true
-            })
-            .expect("Post not found");
+    let mut response = client.get("/posts").dispatch();
+    assert_eq!(response.status(), Status::Ok);
+    let posts = response.into_json::<Vec<crate::Post>>().unwrap();
+    let created_post = posts.into_iter().find(|item| item.id == post.id);
+    assert_eq!(created_post.is_some(), true); // post was created successfully
 
-        Ok(())
-    });
+    println!("\n\n HERE ===> response  {} \n\n ", created_post.unwrap());
 }
 #[test]
 fn test_posts_list() {

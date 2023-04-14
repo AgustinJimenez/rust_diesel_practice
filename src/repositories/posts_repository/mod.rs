@@ -57,3 +57,13 @@ pub fn delete_post(post_id: i32) {
         post_id, num_deleted
     )
 }
+
+pub fn get_post_by_id(post_id: i32) -> rocket::serde::json::Json<Post> {
+    let connection = &mut app::establish_connection();
+    let post: Post = app::schema::posts::table
+        .find(post_id)
+        .get_result(connection)
+        .expect("Post not found");
+    return Json(post);
+    // return post;
+}

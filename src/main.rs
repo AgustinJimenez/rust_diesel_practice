@@ -37,9 +37,18 @@ fn post_delete(id: i32) {
     return repositories::posts_repository::delete_post(id);
 }
 
+// curl -v -i -X GET "http://127.0.0.1:8080/posts/1"
+#[get("/<id>")]
+fn post_by_id(id: i32) -> Json<Post> {
+    return repositories::posts_repository::get_post_by_id(id);
+}
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/posts", routes![posts_list, post_delete, posts_create])
+        .mount(
+            "/posts",
+            routes![posts_list, post_by_id, post_delete, posts_create],
+        )
         .mount("/", routes![index])
 }
