@@ -1,27 +1,29 @@
 #[cfg(test)]
 use super::rocket;
 use app::utils::utils::get_words;
-use diesel::result::Error::RollbackTransaction;
 use diesel::Connection;
 use rocket::http::{ContentType, Status};
 use rocket::local::blocking::Client;
 use rocket::serde::json::serde_json::json;
 
-#[test]
-fn test_create_post() {
-    let client = Client::tracked(rocket()).expect("valid rocket instance");
-    let data = json!(
+fn get_dummy_post() -> rocket::serde::json::Value {
+    return json!(
         {
         "title": get_words(3..5),
         "body": get_words(5..10),
         "published": true
         }
     );
+}
+
+#[test]
+fn test_create_post() {
+    let client = Client::tracked(rocket()).expect("valid rocket instance");
 
     let connection = &mut app::establish_connection();
     connection.begin_test_transaction().unwrap();
-
-    let mut response = client
+    let data = get_dummy_post();
+    let response = client
         .post("/posts")
         .header(ContentType::JSON)
         .body(data.to_string())
@@ -37,7 +39,7 @@ fn test_create_post() {
         data.get("published").unwrap().as_bool().unwrap()
     );
 
-    let mut response = client.get("/posts").dispatch();
+    let response = client.get("/posts").dispatch();
     assert_eq!(response.status(), Status::Ok);
     let posts = response.into_json::<Vec<crate::Post>>().unwrap();
     let created_post = posts.into_iter().find(|item| item.id == post.id);
@@ -48,8 +50,7 @@ fn test_create_post() {
 #[test]
 fn test_posts_list() {
     let client = Client::tracked(rocket()).expect("valid rocket instance");
-
-    // assert_eq!(response.into_string().unwrap(), "Hello, world!");
-    // println!("\n\n HERE ===> response  {} \n\n ", rocket::serde::json::serde_json::to_string_pretty(&posts).unwrap() );
-    // println!("\n\n some ===> some  {} \n\n ", posts.len() );
+    let response = client.get("/posts").dispatch();
+    let posts = response.into_json::<Vec<crate::Post>>().unwrap();
+    assert_eq!(posts.len() > 0, true);
 }

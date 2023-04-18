@@ -1,3 +1,4 @@
+use diesel::prelude::Insertable;
 use diesel::prelude::Queryable;
 use rocket::serde::{Deserialize, Serialize};
 use std::fmt;
@@ -19,4 +20,12 @@ impl fmt::Display for Post {
             self.id, self.title, self.body, self.published
         )
     }
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = app::schema::posts)]
+pub struct NewPost<'a> {
+    pub title: &'a str,
+    pub body: &'a str,
+    pub published: &'a bool,
 }

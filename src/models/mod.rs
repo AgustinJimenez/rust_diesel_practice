@@ -1,2 +1,2 @@
-pub mod new_post;
 pub mod post;
+pub mod post_tests;
