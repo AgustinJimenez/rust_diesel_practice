@@ -1,0 +1,58 @@
+# Use the official Rust image as the base image
+FROM rust:1.64.0 as builder
+
+# Install required system dependencies
+RUN apt-get update \
+    && apt-get install -y postgresql libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a new directory inside the container
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+# Copy the project files to the container
+COPY . .
+
+# Install project dependencies
+RUN cargo install --path .
+
+# Create a new stage for the final image
+FROM rust:1.64.0
+
+# Install required system dependencies
+RUN apt-get update \
+    && apt-get install -y postgresql libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables
+ENV PG_USER=${PG_USER}
+ENV PG_PASSWORD=${PG_PASSWORD}
+ENV DB_HOST=${DB_HOST}
+ENV DB_PORT=${DB_PORT}
+ENV DB_NAME=${DB_NAME}
+ENV DB_TEST_NAME=${DB_TEST_NAME}
+ENV DB_URL=${DB_URL}
+ENV DB_TEST_URL=${DB_TEST_URL}
+ENV ROCKET_DATABASES=${ROCKET_DATABASES}
+
+# Switch to the postgres user and start the PostgreSQL server
+USER postgres
+RUN /etc/init.d/postgresql start \
+    && psql --command "CREATE USER ${PG_USER} WITH SUPERUSER PASSWORD '${PG_PASSWORD}';" \
+    && createdb -O ${PG_USER} ${DB_NAME} \
+    && createdb -O ${PG_USER} ${DB_TEST_NAME}
+
+# Switch back to the root user and copy the project files and installed dependencies
+USER root
+COPY --from=builder /usr/local/cargo/bin/myapp /usr/local/bin/myapp
+COPY --from=builder /usr/src/app /usr/src/app
+
+# Expose the application port
+EXPOSE 8000
+
+# Set the ROCKET_DATABASES environment variable
+ENV DB_HOST $(ip -4 route show default | awk '{print $3}')
+ENV ROCKET_DATABASES=${ROCKET_DATABASES}
+
+# Run the application
+CMD ["myapp"]

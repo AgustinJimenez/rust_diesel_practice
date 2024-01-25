@@ -1,0 +1,9 @@
+threads: 4
+base: "http:127.0.0.1" # Use your deployment URL here
+iterations: 50
+rampup: 2
+
+plan:
+  - name: Retrieve Posts Page
+    request:
+      url: /posts/

@@ -1,11 +1,12 @@
 mod models;
 mod repositories;
+mod routes;
 mod structs;
-mod tests;
 
-use models::post::Post;
-use rocket::serde::json::Json;
-use structs::PostsCreateParams;
+use dotenvy::dotenv;
+use rocket::{Build, Rocket};
+use rocket_sync_db_pools::{database, diesel};
+use std::env;
 
 #[macro_use]
 extern crate rocket;
@@ -15,40 +16,25 @@ fn index() -> &'static str {
     "Hello, world!"
 }
 
-// curl -v POST -H "Content-Type: application/json" \-d '{"title": "Some title 5", "body": "lorem ipsum 332", "published": true}' "http://127.0.0.1:8080/posts"
-#[post("/", format = "application/json", data = "<params>")]
-fn posts_create(params: Json<PostsCreateParams>) -> Json<Post> {
-    return repositories::posts_repository::create_post(
-        &params.title,
-        &params.body,
-        &params.published,
-    );
-}
+#[database("pg_db")]
+pub struct DBConn(diesel::PgConnection);
 
-// curl -v -i -X GET "http://127.0.0.1:8080/posts"
-#[get("/")]
-fn posts_list() -> Json<Vec<Post>> {
-    return repositories::posts_repository::get_posts_json();
-}
+#[database("pg_test_db")]
+pub struct TestDBConn(diesel::PgConnection);
 
-// curl -v -i -X DELETE "http://127.0.0.1:8080/posts/1"
-#[delete("/<id>")]
-fn post_delete(id: i32) {
-    return repositories::posts_repository::delete_post(id);
-}
-
-// curl -v -i -X GET "http://127.0.0.1:8080/posts/1"
-#[get("/<id>")]
-fn post_by_id(id: i32) -> Json<Post> {
-    return repositories::posts_repository::get_post_by_id(id);
+pub fn attach_routes(rocket_build: Rocket<Build>) -> Rocket<Build> {
+    return rocket_build
+        .mount("/posts", routes::posts_routes::get_routes())
+        .mount("/", routes![index]);
 }
 
 #[launch]
-fn rocket() -> _ {
-    rocket::build()
-        .mount(
-            "/posts",
-            routes![posts_list, post_by_id, post_delete, posts_create],
-        )
-        .mount("/", routes![index])
+pub fn rocket() -> _ {
+    dotenv().ok();
+    attach_routes(rocket::build().attach(DBConn::fairing()))
+}
+
+pub fn rocket_test() -> Rocket<Build> {
+    dotenv().ok();
+    return attach_routes(rocket::build().attach(TestDBConn::fairing()));
 }

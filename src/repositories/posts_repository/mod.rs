@@ -1,23 +1,27 @@
 use crate::models::post::{NewPost, Post};
+use crate::DBConn;
 use app::schema::posts as posts_schema;
 use diesel::ExpressionMethods;
 use diesel::{QueryDsl, RunQueryDsl};
 use rocket::serde::json::Json;
 
-pub fn get_posts() -> Vec<Post> {
-    let connection = &mut app::establish_connection();
-    let results = posts_schema::table
-        .filter(posts_schema::published.eq(true))
-        .order(posts_schema::id.desc())
-        .limit(10)
-        .load::<Post>(connection)
+pub async fn get_posts(db_conn: DBConn) -> Vec<Post> {
+    let results = db_conn
+        .run(|c| {
+            posts_schema::table
+                .filter(posts_schema::published.eq(true))
+                .order(posts_schema::id.desc())
+                .limit(10)
+                .load(c)
+        })
+        .await
         .expect("Error loading posts");
 
     return results;
 }
 
-pub fn get_posts_json() -> rocket::serde::json::Json<Vec<Post>> {
-    let result = Json(self::get_posts());
+pub async fn get_posts_json(db_conn: DBConn) -> Json<Vec<Post>> {
+    let result = Json(self::get_posts(db_conn).await);
     return result;
 }
 
@@ -41,27 +45,28 @@ pub fn create_post(
     return Json(post);
 }
 
-pub fn delete_post(post_id: i32) {
+pub async fn delete_post(db_conn: DBConn, post_id: i32) {
     use diesel::prelude::*;
 
-    let connection = &mut app::establish_connection();
-    let num_deleted =
-        diesel::delete(posts_schema::table.filter(posts_schema::columns::id.eq(post_id)))
-            .execute(connection)
-            .expect("Error deleting posts");
-
-    println!(
-        "\n\nDELETE ===> id = {}, num deleted = {} \n\n",
-        post_id, num_deleted
-    )
+    db_conn
+        .run(move |c| {
+            diesel::delete(posts_schema::table.filter(posts_schema::columns::id.eq(post_id)))
+                .execute(c)
+        })
+        .await
+        .expect("Error deleting posts");
 }
 
-pub fn get_post_by_id(post_id: i32) -> rocket::serde::json::Json<Post> {
-    let connection = &mut app::establish_connection();
-    let post: Post = posts_schema::table
-        .find(post_id)
-        .get_result(connection)
-        .expect("Post not found");
+pub async fn get_post_by_id_json(db_conn: DBConn, post_id: i32) -> rocket::serde::json::Json<Post> {
+    let post: Post = get_post_by_id(db_conn, post_id).await;
     return Json(post);
-    // return post;
+}
+
+pub async fn get_post_by_id(db_conn: DBConn, post_id: i32) -> Post {
+    let post: Post = db_conn
+        .run(move |c| posts_schema::table.find(post_id).get_result::<Post>(c))
+        .await
+        .expect("Error loading posts");
+
+    return post;
 }

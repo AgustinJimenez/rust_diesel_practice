@@ -34,3 +34,7 @@
 ### run tests
 
 - cargo test -- --nocapture
+
+### docker
+
+- docker build -t myapp .

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "cargo watch -x run",
-    "test": "cargo test -- --nocapture"
+    "test": "cargo test -- --nocapture",
+    "benchmark": "drill --benchmark benchmark.yml --stats"
   },
   "repository": {
     "type": "git",
